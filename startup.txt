@@ -1,0 +1,72 @@
+/titlebar S
+/titlebar S|
+/titlebar S|=
+/titlebar S|=|
+/titlebar S|=|@
+/titlebar S|=|@|
+/titlebar S|=|@|}
+/titlebar S|=|@|}0
+/titlebar S|=|@|}0\
+/titlebar S|=|@|}0\\
+/titlebar S|=|@|}0\\´
+/titlebar S|=|@|}0\\
+/titlebar S|=|@|}0\
+/titlebar S|=|@|}0
+/titlebar S|=|@|}
+/titlebar S|=|@|
+/titlebar S|=|@
+/titlebar S|=|
+/titlebar S|=
+/titlebar S|
+/titlebar S
+/titlebar
+/titlebar S|
+/titlebar S|=
+/titlebar S|=|
+/titlebar S|=|@
+/titlebar S|=|@|
+/titlebar S|=|@|}
+/titlebar S|=|@|}0
+/titlebar S|=|@|}0\
+/titlebar S|=|@|}0\\
+/titlebar S|=|@|}0\\´ S
+/titlebar S|=|@|}0\\ SC
+/titlebar S|=|@|}0\ SCR
+/titlebar S|=|@|}0 SCRI
+/titlebar S|=|@|} SCRIP
+/titlebar S|=|@| SCRIPT
+/titlebar S|=|@|} SCRIP
+/titlebar S|=|@|}0 SCRI
+/titlebar S|=|@|}0\ SCR
+/titlebar S|=|@|}0\\ SC
+/titlebar S|=|@|}0\\´ S
+/titlebar S|=|@|}0\\´
+/titlebar S|=|@|}0\\
+/titlebar S|=|@|}0\
+/titlebar S|=|@|}0
+/titlebar S|=|@|}
+/titlebar S|=|@|
+/titlebar S|=|@
+/titlebar S|=|
+/titlebar S|=
+/titlebar S|
+/titlebar S
+/titlebar
+/titlebar S|=|@|}0\\´__________S|=|@|}0\\´___________
+/titlebar ___________S|=|@|}0\\´__________S|=|@|}0\\´
+/titlebar S|=|@|}0\\´__________S|=|@|}0\\´___________
+/titlebar ___________S|=|@|}0\\´__________S|=|@|}0\\´
+/titlebar S|=|@|}0\\´__________S|=|@|}0\\´___________
+/titlebar ___________S|=|@|}0\\´__________S|=|@|}0\\´
+/titlebar S|=|@|}0\\´__________S|=|@|}0\\´___________
+/titlebar ___________S|=|@|}0\\´__________S|=|@|}0\\´
+/titlebar
+/titlebar ___________ Script __ Snowman ___ Robocop
+/titlebar S|=|@|}0\\´ ______ by _______ and _______
+/titlebar ___________ Script __ Snowman ___ Robocop
+/titlebar S|=|@|}0\\´ ______ by _______ and _______
+/titlebar ___________ Script __ Snowman ___ Robocop
+/titlebar S|=|@|}0\\´ Script by Snowman and Robocop
+/titlebar S|=|@|}0\\´ Your on $server it is $time -={Waiting for lag Info}=- 
+
+
