@@ -1,0 +1,19 @@
+; S|-|ADO\\' Pager v1.0 (07-06-1998)
+; Plugin for S|-|ADO\\'
+; developed by RoboCop of nOOb <Robo.Cop@gmx.net>
+;
+; Provides a pager for messages.
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: S|-|ADO\\' Pager 1.0
+;auth: RoboCop of nOOb
+;loadonexit: sppurge
+;loadonstart: spstartup
+;
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+
+alias spstartup {
+  
+}
+
+alias sppurge {
+}

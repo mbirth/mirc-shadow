@@ -1,0 +1,47 @@
+; Lame-O-Meter Plugin
+; Plugin for S|-|ADO\\'
+; developed by RoboCop of nOOb <Robo.Cop@gmx.net>
+;
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: Lame-O-Meter Plugin
+;auth: RoboCop of nOOb
+;
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+
+menu nicklist {
+  SPI: Lame-O-Meter
+  .Lamer type 1: lame1 $?="Enter lame-grade (10 = 100%):" $$1
+  .Lamer type 2: lame2 $?="Enter lame-grade (10 = 100%):" $$1
+}
+
+alias -l lame1 {
+  set %z 0
+  unset %ls
+  unset %rs
+  :Addanother
+  if ( %z < $$1 ) { %z = %z + 1 | %ls = %ls $+ _ | goto Addanother }
+  :Addan2
+  if ( %z < 10 ) { %z = %z + 1 | %rs = %rs $+ _ | goto Addan2 }
+  msg $chan 0,12Lame-O-Meter: 7,12 $$2 is 9,9 $+ %ls $+ 3,3 $+ %rs $+ 9,12 $$1 $+ 0 % $+ 7 lame.
+  unset %z
+  unset %ls
+  unset %rs
+}
+
+alias -l lame2 {
+  %tx = Lame-O-Meter: $$2 is $$1 $+ 0 % lame.
+  %lt = $len( %tx ) * 10
+  %lp = %lt * $$1
+  %lp = %lp / 100
+  %rp = $len( %tx )
+  %rp = %rp - $int( %lp )
+  %t1 = $left( %tx , $int( %lp ) )
+  %t2 = $right( %tx , %rp )
+  msg $chan 1,8 $+ %t1 $+ 8,1 $+ %t2 $+ 
+  unset %tx
+  unset %lt
+  unset %lp
+  unset %rp
+  unset %t1
+  unset %t2
+}

@@ -1,0 +1,60 @@
+; AntiHop v1.1 (05-27-1998)
+; Plugin for S|-|ADO\\'
+; developed by RoboCop of nOOb <Robo.Cop@gmx.net>
+;
+; Annoys anybody who joins and quickly parts.
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: AntiHop 1.0
+;auth: RoboCop of nOOb
+;loadonexit: ahpurge
+;loadonstart: ahstartup
+;
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+
+menu status {
+  SPI: AntiHop
+  .Change definition: {
+    set %njd $$?="Enter new value in seconds:"
+    if ( %njd != $null  && %njd > 0 && %njd < 60 ) {
+      set %jumpdef %njd
+      unset %njd
+      echo -s 1,8 S|-|ADO\\'s 1,7 AntiHop  Definition set to %jumpdef seconds
+    }
+    else { unset %njd | echo -s 1,8 S|-|ADO\\'s 1,7 AntiHop  4 WARNING!  New value illegal!! }
+  }
+}
+
+alias ahpurge {
+  unset %jumpdef
+  unset %lastnick
+  unset %nicktime
+}
+
+alias ahstartup {
+  set %jumpdef 5
+  echo -s 7   - Definition of a hop: less than %jumpdef seconds in a channel
+}
+
+on 1:join:#:{
+  set %lastnick $nick
+  if ( %lastnick != $me ) {
+    set %nicktime $ctime
+    echo -s 1,8 S|-|ADO\\'s 1,7 AntiHop  Keeping an eye on  %lastnick  ...
+  }
+}
+
+on 1:part:#:{
+  if ( $nick == %lastnick && $nick != $me ) {
+    echo -s 1,8 S|-|ADO\\'s 1,7 AntiHop  Looking at  %lastnick  ...
+    set %ontime $calc( $ctime - %nicktime )
+    unset %nicktime
+    if ( %ontime <= %jumpdef ) {
+      echo -s 1,8 S|-|ADO\\'s 1,7 AntiHop  %lastnick is a jumper.
+      if ( %ontime == 1 ) { set %timepart der einen Sekunde } | else { set %timepart den %ontime Sekunden }
+      msg %lastnick 1,8 S|-|ADO\\'s 1,7 AntiHop  Macht Dir das Jumpen Spaß?? In %timepart kannst Du doch garnix von $chan mitkriegen...
+      unset %timepart
+    }
+    unset %lastnick
+    unset %ontime
+  }
+}

@@ -1,0 +1,16 @@
+Code Cracker: Possible characters File
+
+Code Cracker original Script by RoboCop and Speedy
+
+This file defines all the characters that could occur in a password
+of someone. Feel free to remove those, of whom you think they are not
+used. But be careful with the char-codes 32, 0 and 61 - they cause
+errors.
+
+Only the chars after "PosChars" are used - you can rename "PosChars" to
+e.g. "PosChars_old" and make a new "PosChars"-list ... so you have a
+backup of the original one.
+
+PosChars_short 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+
+PosChars !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~‘’¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ

@@ -1,0 +1,118 @@
+; COMMAND KICKer v2.5 (08-01-1997)
+; Plugin for S|-|ADO\\'
+; developed by RoboCop (irc.germany.net)
+; This script only works if you got the OP (@) status!
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: COMMAND KICKer 2.5
+;auth: RoboCop of nOOb
+;loadonexit: ckpurgevars
+; 
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+
+menu channel {
+  SPI: Command Kicker (@!)
+  .Reset: ckpurgevars
+  .Info MSGs
+  ..Start / Change interval: {
+    if ( $me isop $chan ) {
+      set %tmp $$?="Enter delay between MSGs in seconds:"
+      if ( %tmp == $null || %tmp <= 0 ) { echo -s 1,8 S|-|ADO\\'s 1,11 Command Kicker  Illegal delay value. Aborting! }
+      else {
+        .timercommkick 100 %tmp amsg 1,8 S|-|ADO\\'s 1,11 Command Kicker  is still online. Type !kick <nick> to kick <nick>. Type !kickme to kick yourself.
+        set %tmp2 %tmp / 60
+        if ( %tmp2 == $int( %tmp2 ) ) {  echo -s 1,8 S|-|ADO\\'s 1,11 Command Kicker  MSG-Timer started / updated. MSG will be sent every %tmp2 minutes. }
+        else { echo -s 1,8 S|-|ADO\\'s 1,11 Command Kicker  MSG-Timer started / updated. MSG will be sent every %tmp seconds. }
+      }
+      unset %tmp
+      unset %tmp2
+    } | else { echo -s 1,8 S|-|ADO\\'s 1,11 Command Kicker  4WARNING! You're no operator. Command Kicker will not work. }
+  }
+  ..Stop: .timercommkick off | echo -s 1,8 S|-|ADO\\'s 1,11 Command Kicker  MSG-Timer halted.
+}
+
+alias ckpurgevars {
+  unset %con
+  unset %kick
+  unset %kick1
+  unset %kick2
+  unset %y
+  unset %vip
+  if ( %kickchan != $null ) { msg %kickchan 1,8 S|-|ADO\\'s 1,11 Command Kicker  is reset. Kick aborted due to master request!! | unset %kickchan }
+}
+
+alias -l alrv {
+  msg $$1 1,8 S|-|ADO\\'s 1,11 Command Kicker  Be fair, $$2 ( %vip ). You had your voice already!
+  unset %vip
+  halt
+}
+
+on @1:text:!kick *:#:{
+  %kick = $2
+  %kickchan = $chan
+  %y = 0
+  if %kick == $me {
+    msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  $nick requests a kick for $me. Kick aborted.
+    goto Dontkick
+  }
+  if %kick isprotect {
+    msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  $nick requests a kick for %kick $+ . Kick aborted because %kick is in $me's protect list.
+    goto Dontkick
+  }
+  if %kick == RoboCop {
+    msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  $nick requested a kick for %kick $+ . Kick aborted because %kick is a protected name.
+    goto Dontkick
+  }
+  if %kick ison $chan {
+    msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  $nick requests a kick for %kick - 3 of you have to agree, just write YES
+    halt
+  }
+  msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  $nick requested a kick for a user not existing in this room. Kick aborted.
+  :Dontkick
+  unset %kick
+  unset %y
+}
+
+on @1:text:YES:#:{
+  %vip = $address($nick,2)
+  if (($nick != %kick) && (%kick != $null)) {
+    if ((%kick1 != $null) && (%kick1 == %vip)) alrv $chan $nick
+    elseif (%kick1 == $null) { set %kick1 %vip | goto conthere }
+    
+    if ((%kick2 != $null) && (%kick2 == %vip)) alrv $chan $nick
+    elseif (%kick2 == $null) { set %kick2 %vip | goto conthere }
+    
+    :conthere
+    %y = %y + 1
+    msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  Agreement No. %y by $nick ...
+    if %y == 3 {
+      msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  Kick agreed by 3 different users. Kicking %kick ... _.·´¯)
+      .kick $chan %kick Kicked by the 1,11 Command Kicker  plugin for 1,8 S|-|ADO\\' 
+      unset %kick
+      unset %kick1
+      unset %kick2
+      unset %kick3
+      unset %kick4
+      unset %y
+      unset %vip
+      unset %kickchan
+    }
+  }
+  elseif (%kick == $nick) msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  Sorry, $nick, but it wouldn't be fair to let you vote.
+}
+
+on @1:text:NO:#:{
+  if ((%kick != $null) && (%kick != $nick)) {
+    unset %y
+    unset %kick
+    unset %kick1
+    unset %kick2
+    unset %kickchan
+    msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  Kick cancelled by $nick
+  }
+  elseif (%kick == $nick) msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  Sorry, $nick, but I cannot allow you to stop your death command. Life is unjust, eh?
+}
+
+on @1:text:!kickme*:#:{
+  msg $chan 1,8 S|-|ADO\\'s 1,11 Command Kicker  Kicking $nick due to stupidity ...
+  .kick $chan $nick Kicked by the 1,11 Command Kicker  plugin for 1,8 S|-|ADO\\' 
+}

@@ -1,0 +1,47 @@
+; Repeat Eliminator v1.0 (08-01-1997)
+; Plugin for S|-|ADO\\'
+; developed by RoboCop (irc.germany.net)
+; This script only works if you got the OP (@) status!
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: Repeat Eliminator 1.0
+;auth: RoboCop of nOOb
+;loadonexit: repurgevars
+; 
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+
+menu channel {
+  SPI: Repeat Eliminator (@!)
+  .Reset: repurgevars
+}
+
+alias repurgevars {
+  unset %text
+  unset %rnick
+  unset %t
+}
+
+on @1:text:*:#:{
+  if (( $nick isprotect ) || ( $nick == RoboCop )) halt
+  if ( $1- != %text ) {
+    set %text $1-
+    set %rnick $nick
+    set %t 0
+    halt
+  }
+  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 0 )) {
+    msg $chan 1,8 S|-|ADO\\'s 1,8 Repeat Eliminator  9,9__ Hey $nick $+ ! Don't repeat it. We have understood.
+    inc %t
+    halt
+  }
+  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 1 )) {
+    msg $chan 1,8 S|-|ADO\\'s 1,8 Repeat Eliminator  8,8__ $nick $+ ! This is your 2nd warning! Once again, and I kick ya ass!
+    inc %t
+    halt
+  }
+  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 2 )) {
+    msg $chan 1,8 S|-|ADO\\'s 1,8 Repeat Eliminator  4,4__ I warned you, $nick! Kicking $nick .... _.·´¯)
+    kick $chan $nick Kicked by the 1,8 Repeat Eliminator  plugin for 1,8 S|-|ADO\\' 
+    unset %t
+    unset %text
+  }
+}

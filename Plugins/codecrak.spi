@@ -1,0 +1,76 @@
+; Code Cracker v1.0 (07-06-1998)
+; Plugin for S|-|ADO\\'
+; developed by Speedy <101.33864@germany.net>
+; ground structure and improved by RoboCop of nOOb <Robo.Cop@gmx.net>
+;
+; Tries all possible passwords within a command
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: Code Cracker 1.0
+;auth: Speedy
+;loadonexit: ccpurge
+;loadonstart: ccstartup
+;
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+; Placeholder for PWD: <=>
+; Variables:
+; %CCcmd - command string with placeholder
+; %CCdel - delay between tries
+; %CCcurcode - current code to try
+; %CCcodemin - minimum length of code
+; %CCcodemax - maximum length of code
+; set %finalcomm $replace( %CCcmd , <=> , %CCcurcode )
+
+
+alias ccstartup {
+  
+}
+
+alias ccpurge {
+  unset %CCcmd
+  unset %CCdel
+  unset %CCcurcode
+  unset %CCcodemin
+  unset %CCcodemax
+}
+
+menu Status {
+  SPI: Code Cracker
+  .Change command: ChangeCMD
+  .Change code params
+  ..Change minimum/maximum length: ChangeMIMA
+  ..Change delay between tries: ChangeDEL
+  ..Change possible characters: ChangeCHR
+  
+}
+
+alias -l ChangeMIMA {
+  
+}
+
+alias -l ChangeDEL {
+  
+}
+
+alias -l ChangeCHR {
+  echo -s 1,8 S|-|ADO\\'s 4 Code Cracker  Running Texteditor ...
+  .run notepad.exe $scriptdir $+ codecrak.pos
+}
+
+alias -l ChangeCMD {
+  if ( %CCcmd != $null ) { echo -s 1,8 S|-|ADO\\'s 4 Code Cracker  Old command string: %CCcmd }
+  else { echo -s 1,8 S|-|ADO\\'s 4 Code Cracker  7No old command string assigned! }
+  :CodeEntry
+  echo -s Enter new code or leave blank to use the old one.
+  echo -s 7 Use <=> as placeholder for the password. 
+  set %CCncmd $?="Enter new command (<=> for PWD):"
+  if ( $count( %CCncmd , <=> ) == 0 && %CCncmd != $null ) {
+    echo -s 15-----
+    echo -s 0,4 WARNING! 4 You did not use the placeholder (<=>) for the password-location. Command string invalid! 
+    echo -s Please re-enter!
+    goto CodeEntry
+  }
+  if ( %CCncmd != $null ) {  set %CCcmd %CCncmd | unset %CCncmd | echo -s New command string:  %CCcmd  }
+  else { echo -s No new command assigned. Using old one! }
+  if ( 
+  echo -s 15-----
+}

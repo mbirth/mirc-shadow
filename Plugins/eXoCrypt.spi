@@ -1,0 +1,121 @@
+; eXocrypt 2.0 Pro (08-12-1997)
+; Plugin for S|-|ADO\\'
+; drastically extended by RoboCop of nOOb <Robo.Cop@gmx.net>
+; based on EXOCRYPT by an unknown author
+;-=-= BEGIN SHADOW PLUGIN DEFINITION =-=-
+;name: eXocrypt 2.0 Pro
+;auth: RoboCop of nOOb
+;loadonexit: ExoPurge
+;loadonstart: ExoStart
+;
+;-=-= END SHADOW PLUGIN DEFINITION =-=-
+
+alias ExoStart {
+  set %exodir $scriptdir
+  set %CrypFile %exodir $+ exocrypt.exo
+  set %S $read -sSignature %CrypFile
+  set %N $read -sName %CrypFile
+  set %R $read -sRecipients %CrypFile
+  set %P $read -sPlain %CrypFile
+  set %C $read -sCoded %CrypFile
+  if ( %S == $null ) { Method }
+}
+
+menu channel {
+  SPI: eXocrypt
+  .Change CODE:Method
+  .Info about current CODE:MI
+  .Send crypted message:eXo
+}
+
+alias ExoPurge {
+  unset %S
+  unset %N
+  unset %R
+  unset %P
+  unset %C
+  unset %exodir
+  unset %CrypFile  
+}
+
+alias -l Method {
+  set %exofiles %exodir $+ *.exo
+  set %CrypFile $$dir="Select file with code for encryption" %exofiles
+  unset %exofiles
+  %S = $read -sSignature %CrypFile
+  %N = $read -sName %CrypFile
+  %R = $read -sRecipients %CrypFile
+  %P = $read -sPlain %CrypFile
+  %C = $read -sCoded %CrypFile
+  echo -a 1,8 You selected 1,9 %N 1,8 encryption 1,9( $+ %S $+ )1,8. Recipients:1,9 %R 1,8.
+}
+
+alias -l MI {
+  echo -s 1,8 S|-|ADO\\'s 1,7 eXocrypt  0,4 Encryption method 
+  echo -s 8 Filename:  $nopath( %CrypFile )  --- 8 Signature:  %S 
+  echo -s 8 Name:  %N  --- 8 Recipients:  %R 
+  echo -s 8 Plain:  %P 
+  echo -s 8 Code:  %C 
+}
+
+alias eXo {
+  set %eXo $$?1="Enter Text To eXoCrYpT" *2
+  %char = 1
+  :DoItAgain
+  %eXo = $replace(%eXo, $mid(%P,%char,1), $mid(%C,%char,1))
+  %char = %char + 1
+  if %char <= 39 goto DoItAgain
+  unset %char
+  say %S %eXo
+  echo 4 -a < $+ %N coded to %R $+ > $$1-
+  unset %eXo
+}
+
+alias -l deeXo {
+  if ( %DCrypFile == $null ) { return }
+  %DN = $read -sName %DCrypFile
+  %DR = $read -sRecipients %DCrypFile
+  %DP = $read -sPlain %DCrypFile
+  %DC = $read -sCoded %DCrypFile
+  %char = 1
+  :DoItAgain
+  %deeXo = $replace(%deeXo, $mid(%DC,%char,1), $mid(%DP,%char,1))
+  %char = %char + 1
+  if %char <= 39 goto DoItAgain
+  unset %char
+  echo 4 -a < $+ %DN coded from %exonick $+ > %deeXo
+  unset %DN
+  unset %DR
+  unset %DP
+  unset %DC
+}
+
+ON 1:TEXT:*:*:{
+  set %Sign $parm1
+  set %deeXo $parm2*
+  set %eXonick $nick
+  set %exofilect 1
+  :UseNextFile
+  %DCrypFile = $findfile(%exodir,*.exo,%exofilect) 
+  %CS = $read -sSignature %DCrypFile
+  if ( %Sign == %CS ) {
+    deeXo
+    goto EndOfThis
+  }
+  inc %exofilect
+  if ( $findfile(%exodir,*.exo,%exofilect) != $null ) { goto UseNextfile }
+  :EndOfThis
+  unset %try
+  unset %CS
+  unset %Sign
+  unset %exofilect
+  unset %deeXo
+  unset %eXonick
+  unset %DCrypFile
+}
+
+ON 1:CHAT:*:{
+  set %deeXo $parm2*
+  set %eXonick $nick
+  deeXo
+}
